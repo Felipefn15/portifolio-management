@@ -24,12 +24,32 @@ export async function signUp(email: string, password: string, name: string): Pro
 
   // In a real app, store the hashed password in the database
   // For this challenge, we'll simulate it by storing in a separate file
-  const users = require("../data/users.json")
-  const userPasswords = require("../data/passwords.json") || {}
+  const fs = require("fs")
+  const path = require("path")
+
+  const PASSWORDS_FILE = path.join(process.cwd(), "data", "passwords.json")
+
+  let userPasswords = {}
+
+  // Check if the passwords file exists
+  if (fs.existsSync(PASSWORDS_FILE)) {
+    try {
+      const data = fs.readFileSync(PASSWORDS_FILE, "utf8")
+      userPasswords = JSON.parse(data)
+    } catch (error) {
+      console.error("Error reading passwords file:", error)
+    }
+  }
 
   userPasswords[user.id] = hashedPassword
 
-  require("fs").writeFileSync("./data/passwords.json", JSON.stringify(userPasswords, null, 2))
+  // Ensure the data directory exists
+  const dataDir = path.join(process.cwd(), "data")
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true })
+  }
+
+  fs.writeFileSync(PASSWORDS_FILE, JSON.stringify(userPasswords, null, 2))
 
   return user
 }
@@ -40,7 +60,24 @@ export async function signIn(email: string, password: string): Promise<User | nu
 
   // In a real app, get the hashed password from the database
   // For this challenge, we'll simulate it by reading from a separate file
-  const userPasswords = require("../data/passwords.json") || {}
+  const fs = require("fs")
+  const path = require("path")
+
+  const PASSWORDS_FILE = path.join(process.cwd(), "data", "passwords.json")
+
+  if (!fs.existsSync(PASSWORDS_FILE)) {
+    return null
+  }
+
+  let userPasswords = {}
+  try {
+    const data = fs.readFileSync(PASSWORDS_FILE, "utf8")
+    userPasswords = JSON.parse(data)
+  } catch (error) {
+    console.error("Error reading passwords file:", error)
+    return null
+  }
+
   const hashedPassword = userPasswords[user.id]
 
   if (!hashedPassword) return null
@@ -101,11 +138,21 @@ export async function getCurrentUser(): Promise<User | null> {
   return user
 }
 
-// This function is mocked for the challenge
+// This function is for the challenge
 // In a real app, you would use your database
 async function getUserById(id: string): Promise<User | null> {
   try {
-    const users = require("../data/users.json")
+    const fs = require("fs")
+    const path = require("path")
+
+    const USERS_FILE = path.join(process.cwd(), "data", "users.json")
+
+    if (!fs.existsSync(USERS_FILE)) {
+      return null
+    }
+
+    const data = fs.readFileSync(USERS_FILE, "utf8")
+    const users = JSON.parse(data)
     return users.find((user: User) => user.id === id) || null
   } catch (error) {
     return null
