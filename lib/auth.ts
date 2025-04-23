@@ -1,8 +1,8 @@
 import { cookies } from "next/headers"
-import { createUser, getUserByEmail } from "./db"
+import { createUser, getUserByEmail, getUserById } from "./db"
 import type { User } from "./types"
 import bcrypt from "bcryptjs"
-import jwt from "jsonwebtoken"
+import * as jwt from "jsonwebtoken"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key"
 const COOKIE_NAME = "auth_token"
@@ -89,14 +89,20 @@ export async function signIn(email: string, password: string): Promise<User | nu
 }
 
 export function createToken(user: User): string {
-  return jwt.sign(
-    {
-      id: user.id,
-      email: user.email,
-    },
-    JWT_SECRET,
-    { expiresIn: "7d" },
-  )
+  // Use a simpler approach to create the JWT token
+  try {
+    return jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+      },
+      JWT_SECRET,
+      { expiresIn: "7d" },
+    )
+  } catch (error) {
+    console.error("Error creating token:", error)
+    throw new Error("Failed to create authentication token")
+  }
 }
 
 export function setAuthCookie(token: string): void {
@@ -120,41 +126,26 @@ export function getAuthToken(): string | undefined {
 
 export function verifyToken(token: string): any {
   try {
+    // Use a simpler approach to verify the JWT token
     return jwt.verify(token, JWT_SECRET)
   } catch (error) {
+    console.error("Token verification error:", error)
     return null
   }
 }
 
 export async function getCurrentUser(): Promise<User | null> {
-  const token = getAuthToken()
-  if (!token) return null
-
-  const decoded = verifyToken(token)
-  if (!decoded) return null
-
-  const { id } = decoded
-  const user = await getUserById(id)
-  return user
-}
-
-// This function is for the challenge
-// In a real app, you would use your database
-async function getUserById(id: string): Promise<User | null> {
   try {
-    const fs = require("fs")
-    const path = require("path")
+    const token = getAuthToken()
+    if (!token) return null
 
-    const USERS_FILE = path.join(process.cwd(), "data", "users.json")
+    const decoded = verifyToken(token)
+    if (!decoded || !decoded.id) return null
 
-    if (!fs.existsSync(USERS_FILE)) {
-      return null
-    }
-
-    const data = fs.readFileSync(USERS_FILE, "utf8")
-    const users = JSON.parse(data)
-    return users.find((user: User) => user.id === id) || null
+    const user = await getUserById(decoded.id)
+    return user
   } catch (error) {
+    console.error("Get current user error:", error)
     return null
   }
 }

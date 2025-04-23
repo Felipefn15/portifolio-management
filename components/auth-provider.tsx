@@ -34,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(null)
         }
       } catch (error) {
+        console.error("Auth check error:", error)
         setUser(null)
       } finally {
         setLoading(false)
@@ -47,9 +48,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Redirect based on auth status
     if (!loading) {
       const publicPaths = ["/login", "/signup"]
-      const isPublicPath = publicPaths.includes(pathname)
+      const isPublicPath = publicPaths.includes(pathname || "")
 
-      if (!user && !isPublicPath) {
+      if (!user && !isPublicPath && pathname !== "/") {
         router.push("/login")
       } else if (user && isPublicPath) {
         router.push("/dashboard")

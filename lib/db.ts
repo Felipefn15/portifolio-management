@@ -14,30 +14,54 @@ const ASSETS_FILE = path.join(DB_PATH, "assets.json")
 
 // Ensure the data directory exists
 if (!fs.existsSync(DB_PATH)) {
-  fs.mkdirSync(DB_PATH, { recursive: true })
+  try {
+    fs.mkdirSync(DB_PATH, { recursive: true })
+  } catch (error) {
+    console.error("Failed to create data directory:", error)
+  }
 }
 
 // Initialize files if they don't exist
-if (!fs.existsSync(USERS_FILE)) {
-  fs.writeFileSync(USERS_FILE, JSON.stringify([]))
+function initializeFile(filePath: string) {
+  if (!fs.existsSync(filePath)) {
+    try {
+      fs.writeFileSync(filePath, JSON.stringify([]))
+    } catch (error) {
+      console.error(`Failed to initialize ${filePath}:`, error)
+    }
+  }
 }
 
-if (!fs.existsSync(WALLETS_FILE)) {
-  fs.writeFileSync(WALLETS_FILE, JSON.stringify([]))
-}
-
-if (!fs.existsSync(ASSETS_FILE)) {
-  fs.writeFileSync(ASSETS_FILE, JSON.stringify([]))
-}
+// Initialize all required files
+initializeFile(USERS_FILE)
+initializeFile(WALLETS_FILE)
+initializeFile(ASSETS_FILE)
 
 // Helper functions to read and write data
 function readData<T>(filePath: string): T[] {
-  const data = fs.readFileSync(filePath, "utf8")
-  return JSON.parse(data)
+  try {
+    if (!fs.existsSync(filePath)) {
+      return []
+    }
+    const data = fs.readFileSync(filePath, "utf8")
+    return JSON.parse(data)
+  } catch (error) {
+    console.error(`Error reading ${filePath}:`, error)
+    return []
+  }
 }
 
 function writeData<T>(filePath: string, data: T[]): void {
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2))
+  try {
+    // Ensure directory exists before writing
+    const dir = path.dirname(filePath)
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true })
+    }
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2))
+  } catch (error) {
+    console.error(`Error writing to ${filePath}:`, error)
+  }
 }
 
 // User operations
