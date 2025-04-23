@@ -1,6 +1,6 @@
-import { redirect } from "next/navigation"
+import RedirectToLogin from "./redirect-to-login"
 
 export default function Home() {
-  // Redirect to login page
-  redirect("/login")
+  // Use a client component for redirection
+  return <RedirectToLogin />
 }

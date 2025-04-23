@@ -62,7 +62,7 @@
     "fs": "latest",
     "path": "latest",
     "bcryptjs": "latest",
-    "jsonwebtoken": "latest"
+    "jose": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

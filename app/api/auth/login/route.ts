@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create and set JWT token
-    const token = createToken(user)
+    const token = await createToken(user)
     setAuthCookie(token)
 
     // Return user data (excluding sensitive information)
