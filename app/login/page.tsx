@@ -15,19 +15,26 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
   const { login } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email || !password) return
+    if (!email || !password) {
+      setError("Email and password are required")
+      return
+    }
 
+    setError("")
     setIsLoading(true)
     try {
       await login(email, password)
       router.push("/dashboard")
     } catch (error) {
+      console.error("Login error:", error)
+      setError("Invalid email or password")
       toast({
         title: "Error",
         description: "Invalid email or password",
@@ -45,6 +52,7 @@ export default function LoginPage() {
           <h1 className="text-3xl font-bold">CareMinds Portfolio</h1>
           <p className="mt-2 text-sm text-muted-foreground">Sign in to manage your investment portfolios</p>
         </div>
+        {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">{error}</div>}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div className="space-y-2">

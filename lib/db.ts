@@ -1,24 +1,23 @@
 import type { Asset, User, Wallet } from "./types"
 import { v4 as uuidv4 } from "uuid"
-import fs from "fs"
-import path from "path"
+import * as fs from "fs"
+import * as path from "path"
 import { calculateAssetMetrics, calculateWalletMetrics } from "./calculations"
 
 // Simple file-based database for the challenge
 // In a real application, you would use a proper database
 
-const DB_PATH = path.join(process.cwd(), "data")
-const USERS_FILE = path.join(DB_PATH, "users.json")
-const WALLETS_FILE = path.join(DB_PATH, "wallets.json")
-const ASSETS_FILE = path.join(DB_PATH, "assets.json")
-
-// Ensure the data directory exists
-if (!fs.existsSync(DB_PATH)) {
-  try {
-    fs.mkdirSync(DB_PATH, { recursive: true })
-  } catch (error) {
-    console.error("Failed to create data directory:", error)
+// Ensure data directory exists
+function ensureDataDirectory() {
+  const dataDir = path.join(process.cwd(), "data")
+  if (!fs.existsSync(dataDir)) {
+    try {
+      fs.mkdirSync(dataDir, { recursive: true })
+    } catch (error) {
+      console.error("Failed to create data directory:", error)
+    }
   }
+  return dataDir
 }
 
 // Initialize files if they don't exist
@@ -31,11 +30,6 @@ function initializeFile(filePath: string) {
     }
   }
 }
-
-// Initialize all required files
-initializeFile(USERS_FILE)
-initializeFile(WALLETS_FILE)
-initializeFile(ASSETS_FILE)
 
 // Helper functions to read and write data
 function readData<T>(filePath: string): T[] {
@@ -63,6 +57,17 @@ function writeData<T>(filePath: string, data: T[]): void {
     console.error(`Error writing to ${filePath}:`, error)
   }
 }
+
+// Initialize data files
+const dataDir = ensureDataDirectory()
+const USERS_FILE = path.join(dataDir, "users.json")
+const WALLETS_FILE = path.join(dataDir, "wallets.json")
+const ASSETS_FILE = path.join(dataDir, "assets.json")
+
+// Initialize all required files
+initializeFile(USERS_FILE)
+initializeFile(WALLETS_FILE)
+initializeFile(ASSETS_FILE)
 
 // User operations
 export async function createUser(userData: Omit<User, "id">): Promise<User> {

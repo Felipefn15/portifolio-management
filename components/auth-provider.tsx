@@ -44,20 +44,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkAuth()
   }, [])
 
-  useEffect(() => {
-    // Redirect based on auth status
-    if (!loading) {
-      const publicPaths = ["/login", "/signup"]
-      const isPublicPath = publicPaths.includes(pathname || "")
-
-      if (!user && !isPublicPath && pathname !== "/") {
-        router.push("/login")
-      } else if (user && isPublicPath) {
-        router.push("/dashboard")
-      }
-    }
-  }, [user, loading, pathname, router])
-
   const login = async (email: string, password: string) => {
     setLoading(true)
     try {
@@ -70,14 +56,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
 
       if (!res.ok) {
-        const error = await res.json()
-        throw new Error(error.message || "Login failed")
+        const errorData = await res.json().catch(() => ({ message: "Login failed" }))
+        throw new Error(errorData.message || "Login failed")
       }
 
       const userData = await res.json()
       setUser(userData)
       router.push("/dashboard")
     } catch (error) {
+      console.error("Login error:", error)
       if (error instanceof Error) {
         throw new Error(error.message)
       }
@@ -99,14 +86,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
 
       if (!res.ok) {
-        const error = await res.json()
-        throw new Error(error.message || "Signup failed")
+        const errorData = await res.json().catch(() => ({ message: "Signup failed" }))
+        throw new Error(errorData.message || "Signup failed")
       }
 
       const userData = await res.json()
       setUser(userData)
       router.push("/dashboard")
     } catch (error) {
+      console.error("Signup error:", error)
       if (error instanceof Error) {
         throw new Error(error.message)
       }
